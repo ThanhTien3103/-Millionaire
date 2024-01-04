@@ -957,7 +957,7 @@ void *loginSession(void *client_sock) {
                     strcat(mesg, "\n");
                     send_to_others(mesg, -1, room_entered);
                     
-                    int i, j = 3, k, help;
+                    int i, j = 3, k, help, nextQ = 1;
                     int getMoneyDefault;
                     for (i = 0; i < 15; i++) {
                         if (help == 0) {
@@ -1012,12 +1012,51 @@ void *loginSession(void *client_sock) {
                         int sn = snprintf(mesg, sizeof(mesg), "[%d - %s]: %c\n", cli->connfd, cli->login_account, to_ABCD(atoi(answer)));
                         printf(CYN "%s" RESET, mesg);
                         send_to_others(mesg, connfd, room_entered);
-                        if (atoi(answer) == 6){
+                        if(atoi(answer) == 7){
+                            i--;
+                            help = 1;
+                            if(nextQ == 0){
+                                
+                                sprintf(mesg, "Đã hết số lượt sử dụng sự trợ giúp đổi câu hỏi.\nĐáp án của bạn: ");
+                                printf("%s\n", mesg);
+                                send_to_others(mesg, -1, room_entered);
+                            }
+                            else {
+                                nextQ = 0;
+                                char currentQuestion[BUFF_SIZE] ;
+                                strcpy(currentQuestion ,(char *)sqlite3_column_text(res, 0));
+                                char sql[BUFF_SIZE];
+                                snprintf(sql, sizeof(sql), "SELECT * FROM Question%d ORDER BY RANDOM() LIMIT 1", i + 2);
+                                char newQuestion[BUFF_SIZE];
+                                // Rerun the query until a different question is obtained
+                                do {
+                                    rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+                                    if (rc != SQLITE_OK) {
+                                        fprintf(stderr, "Failed to select data\n");
+                                        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+                                        sqlite3_close(db);
+                                        continue;
+                                    }
+                                    int step = sqlite3_step(res);
+                                    strcpy(newQuestion, (char *)sqlite3_column_text(res, 0));
+                                } while (strcmp(currentQuestion, newQuestion) == 0);
+                                int sn = snprintf(mesg, sizeof(mesg), "Bạn đã xin đổi câu hỏi!\nCâu hỏi %d: %s\nA. %s\nB. %s\nC. %s\nD. %s\nĐáp án của bạn:\n", i+2,
+                                sqlite3_column_text(res, 0),
+                                sqlite3_column_text(res, 1),
+                                sqlite3_column_text(res, 2),
+                                sqlite3_column_text(res, 3),
+                                sqlite3_column_text(res, 4));
+                                printf("%s\n", mesg);
+                                send_to_others(mesg, -1, room_entered);
+                            }//continue;
+                        }
+                            //continue;
+                        else if (atoi(answer) == 6){
                             sprintf(mesg, "Bạn đã xin dừng cuộc chơi!\n Đáp án đúng là %c\n giải thưởng bạn nhận được là: %d vnđ \n", to_ABCD(atoi((char *)sqlite3_column_text(res, 5))), score[i-1]);
                             send_to_others(mesg, -1, room_entered);
                             break;
                         }
-                        if (atoi(answer) == 5) {
+                        else if (atoi(answer) == 5) {
                             // pthread_mutex_lock(&mutex);
                             help = 1; 
                             i--;

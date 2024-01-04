@@ -78,6 +78,7 @@ void *recvmg(void *my_sock){
 	    if(strstr(data,"xin dừng cuộc chơi")){
 	    	end_game_online = 1;
 	    }
+	   
 	    if(strstr(data, "Sai! Đáp án đúng là") == NULL 
 	    && strstr(data, "Chúc mừng bạn đã trả lời đúng 15 câu hỏi!") == NULL
 	    && strstr(data, "Không đủ người chơi online") == NULL
@@ -277,9 +278,12 @@ int main() {
 										else if( strcmp(str,"S") == 0){
 											answer = 6;
 										}
+										else if( strcmp(str,"N") == 0){
+											answer = 7;
+										}
 										else if (strstr(str, "Sai! Đáp án đúng là") != NULL) break;
 										if (answer == 0) sprintf(str,"%d", answer);
-									} while (answer != 1 && answer != 2 && answer != 3 && answer != 4 && answer != 5 && answer != 6);
+									} while (answer != 1 && answer != 2 && answer != 3 && answer != 4 && answer != 5 && answer != 6 && answer != 7);
 									if (end_game_online == 1) break;
 									// printf("  ");
 									clock_t end = clock();
